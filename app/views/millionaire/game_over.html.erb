@@ -1,0 +1,20 @@
+<!-- Replay button -->
+<script type="text/javascript">
+	$(document).ready(function() {
+		
+		var root = location.protocol + '//' + location.host + "/millionaire/start?nameid=<%=@nameid%>&dataset=<%=@dataset%>"
+ 		$("#replay").click(function(){
+ 			window.location.replace(root)
+ 		});
+ 		
+ 	});
+</script>
+
+<div id="gameovertext" align ="center">
+	<p style="color:white; font-size: 50px; padding-top: 50px"><%=@score%> correct answers!</p>
+</div>
+
+<div id="replayDiv" align="center">
+	<button id="replay">play again!</button>
+</div>
+

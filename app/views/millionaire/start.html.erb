@@ -1,0 +1,63 @@
+<html style="background-color:black">
+
+<head>
+	<script type="text/javascript">
+		$(document).ready(function() {
+		$("#dataset").val(<%=@dataset%>);
+		$("#start").click(function(){
+			var dataset = $("#dataset").val();
+			var name = $("#name").val();
+			if (name != ""){
+				$("#pre-start").fadeOut();
+				$("#noNameError").fadeOut();
+				var root = location.protocol + '//' + location.host;
+ 					window.location.replace(root+"/millionaire/game?nameid="+name+"&dataset="+dataset);
+		}else{
+			$("#noNameError").show();
+		}
+	});
+	});
+	</script>
+
+	<link href="http://fonts.googleapis.com/css?family=Roboto+Slab" rel="stylesheet" type="text/css" />
+</head>
+
+<div id="pre-start" align="center">
+	<div>
+	<p style="color:white; font-size: 20px; padding-top: 50px">Enter your name </p>
+	<input type="text" id="name" style="font-size:20px" value=<%=@nameid.to_s%>></input>
+</div>
+<div>
+	<p style="color:white; font-size: 20px; ">Pick dataset</p>
+	<select id="dataset">
+		<option value="1"> 1 </option>
+		<option value="2"> 2 </option>
+		<option value="3"> 3 </option>
+		<option value="4"> 4 </option>
+		<option value="5"> 5 </option>
+	</select>
+</div>
+		<br />
+		<br />
+		<button id="start" style="font-size: 20px; border-radius:20px; background-color:blue; color:white">Start game!</button>
+</div>
+
+<!-- Fejl-meddelelse-->		
+<div id="noNameError" align="center" style="display:none">
+	<p style="color:red; font-size:20px">Enter a name!</p>
+</div>
+
+<div align="center">
+	<h2 style="color:white">Scoreboard</h2>
+	<p style="font-style: italic; color:grey; max-width: 200px"> *the score is the sum of right answers from all the datasets</p>
+	<table id="scoreboard">
+		<% @user_list.each_with_index do |(k,v), index| %>
+			<tr class="<%= cycle('list_line_odd', 'list_line_even')%>">
+				<td style="padding-right:50px;"><%= (index+1).to_s+". "+ k %></td>
+				<td><%= v %></td>
+		<%end%>
+
+	</table>
+</div>
+
+</html>

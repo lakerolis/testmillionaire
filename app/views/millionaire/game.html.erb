@@ -1,0 +1,216 @@
+<html>
+<head>
+		<link href="http://fonts.googleapis.com/css?family=Roboto+Slab" rel="stylesheet" type="text/css" />
+
+		<script type="text/javascript">
+
+			$(document).ready(function() {
+				//startSound('background', true);
+				var index = <%=@dataset%> -1
+				$.getJSON("/assets/questions.json", function(data) {
+					$('#problem-set').find(":selected").val()
+					ko.applyBindings(new MillionaireModel(data.games[index]));				
+	});
+});
+
+			Number.prototype.money = function(fixed, decimalDelim, breakDelim){
+	var n = this, 
+	fixed = isNaN(fixed = Math.abs(fixed)) ? 2 : fixed, 
+	decimalDelim = decimalDelim == undefined ? "." : decimalDelim, 
+	breakDelim = breakDelim == undefined ? "," : breakDelim, 
+	negative = n < 0 ? "-" : "", 
+	i = parseInt(n = Math.abs(+n || 0).toFixed(fixed)) + "", 
+	j = (j = i.length) > 3 ? j % 3 : 0;
+	return negative + (j ? i.substr(0, j) +
+		 breakDelim : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + breakDelim) +
+		  (fixed ? decimalDelim + Math.abs(n - i).toFixed(fixed).slice(2) : "");
+}
+
+startSound = function(id, loop) {
+	soundHandle = document.getElementById(id);
+	if(loop)
+		soundHandle.setAttribute('loop', loop);
+	soundHandle.play();
+}
+
+
+	var MillionaireModel = function(data) {
+	var self = this;
+	var score = 0;
+
+	// The 15 questions of this game
+    this.questions = data.questions;
+
+    // A flag to keep multiple selections
+    // out while transitioning levels
+    this.transitioning = false;
+
+    // The current money obtained
+ 	this.money = new ko.observable(0);
+
+ 	// The current level(starting at 1) 
+ 	this.level = new ko.observable(1);
+
+ 	// The three options the user can use to 
+ 	// attempt to answer a question (1 use each)
+ 	this.usedFifty = new ko.observable(false);
+ 	this.usedPhone = new ko.observable(false);
+ 	this.usedAudience = new ko.observable(false);
+
+ 	// Grabs the question text of the current question
+ 	self.getQuestionText = function() {
+ 		return self.questions[self.level() - 1].question;
+ 	}
+
+ 	// Gets the answer text of a specified question index (0-3)
+ 	// from the current question
+ 	self.getAnswerText = function(index) {
+ 		return self.questions[self.level() - 1].content[index];
+ 	}
+
+ 	// Uses the fifty-fifty option of the user
+ 	self.fifty = function(item, event) {
+ 		if(self.transitioning)
+ 			return;
+ 		$(event.target).fadeOut('slow');
+ 		var correct = this.questions[self.level() - 1].correct;
+ 		var first = (correct + 1) % 4;
+ 		var second = (first + 1) % 4;
+ 		if(first == 0 || second == 0) {
+ 			$("#answer-one").fadeOut('slow');
+ 		}
+ 		if(first == 1 || second == 1) {
+ 			$("#answer-two").fadeOut('slow');
+ 		}
+ 		if(first == 2 || second == 2) {
+ 			$("#answer-three").fadeOut('slow');
+ 		}
+ 		if(first == 3 || second == 3) {
+ 			$("#answer-four").fadeOut('slow');
+ 		}
+ 	}
+
+ 	// Fades out an option used if possible
+ 	self.fadeOutOption = function(item, event) {
+ 		if(self.transitioning)
+ 			return;
+ 		$(event.target).fadeOut('slow');
+ 	}
+
+ 	// Attempts to answer the question with the specified
+ 	// answer index (0-3) from a click event of elm
+ 	self.answerQuestion = function(index, elm) {
+ 		if(self.transitioning)
+ 			return;
+ 		self.transitioning = true;
+ 		if(self.questions[self.level() - 1].correct == index) {
+ 			rightAnswer(elm);
+ 		} else {
+ 			wrongAnswer(elm, name);
+ 		}
+ 	}
+
+ 	rightAnswer = function(elm) {
+ 		$("#" + elm).slideUp('slow', function() {
+ 			score ++;
+ 			//startSound('rightsound', false);
+ 			$("#" + elm).css('background', 'green').slideDown('slow', function() {
+ 				//money($(".active").data('amt'));
+ 				if(self.level() + 1 > 15) {
+	 				$("#game").fadeOut('slow', function() {
+	 					var root = location.protocol + '//' + location.host;
+ 					window.location.replace(root+"/millionaire/game_over?nameid=<%=@nameid.to_s%>&erocs435="+score);
+	 				});
+ 				} else {
+ 					self.level(self.level() + 1);
+ 					$("#" + elm).css('background', 'none');
+			 		$("#answer-one").show();
+			 		$("#answer-two").show();
+			 		$("#answer-three").show();
+			 		$("#answer-four").show();
+			 		self.transitioning = false;
+ 				}
+ 			});
+ 		});
+ 	}
+
+ 	// Executes the proceedure of guessing incorrectly, losing the game.
+ 	wrongAnswer = function(elm, name) {
+ 		$("#" + elm).slideUp('slow', function() {
+ 			//startSound('wrongsound', false);
+ 			$("#" + elm).css('background', 'red').slideDown('slow', function() {
+ 				$("#game").fadeOut('slow', function() {
+ 					var root = location.protocol + '//' + location.host;
+ 					window.location.replace(root+"/millionaire/game_over?nameid=<%=@nameid.to_s%>&erocs435="+score+"&dataset=<%=@dataset%>");
+ 				});
+ 			});
+ 		});
+ 	}
+
+ 	// Gets the money formatted string of the current won amount of money.
+ 	self.formatMoney = function() {
+	    return self.money().money(2, '.', ',');
+	}
+};
+
+		</script>
+</head>
+
+<body>
+		<!-- HTML5 Audio tags - weakly supported, works in Chrome(tested)
+	
+		<audio id="background" src='/assets/background.mp3'></audio>
+		<audio id="rightsound" src='/assets/right.mp3'></audio>
+		<audio id="wrongsound" src='/assets/wrong.mp3'></audio> -->	
+
+		<!-- The actual game markup -->
+		<div id="game">
+			<div id="top">
+				<img src="/assets/logo.jpg" id="logo" />
+				<ul id="levels">
+					<li data-bind="css: {active: level() == 15}" data-amt="1000000" data-lvl="15">$1,000,000</li>
+					<li data-bind="css: {active: level() == 14}" data-amt="500000" data-lvl="14">$500,000</li>
+					<li data-bind="css: {active: level() == 13}" data-amt="250000" data-lvl="13">$250,000</li>
+					<li data-bind="css: {active: level() == 12}" data-amt="125000" data-lvl="12">$125,000</li>
+					<li data-bind="css: {active: level() == 11}" data-amt="64000" data-lvl="11">$64,000</li>
+					<li data-bind="css: {active: level() == 10}" data-amt="32000" data-lvl="10">$32,000</li>
+					<li data-bind="css: {active: level() == 9}" data-amt="16000" data-lvl="9">$16,000</li>
+					<li data-bind="css: {active: level() == 8}" data-amt="8000" data-lvl="8">$8,000</li>
+					<li data-bind="css: {active: level() == 7}" data-amt="4000" data-lvl="7">$4,000</li>
+					<li data-bind="css: {active: level() == 6}" data-amt="2000" data-lvl="6">$2,000</li>
+					<li data-bind="css: {active: level() == 5}" data-amt="1000" data-lvl="5">$1,000</li>
+					<li data-bind="css: {active: level() == 4}" data-amt="500" data-lvl="4">$500</li>
+					<li data-bind="css: {active: level() == 3}" data-amt="300" data-lvl="3">$300</li>
+					<li data-bind="css: {active: level() == 2}" data-amt="200" data-lvl="2">$200</li>
+					<li data-bind="css: {active: level() == 1}" data-amt="100" data-lvl="1">$100</li>
+				</ul>
+				<div class="clear"></div>
+			</div>
+			<div id="options">
+				<div id="fifty" class="options-button" data-bind="click: fifty"></div>
+				<div id="phone-friend" class="options-button" data-bind="click: fadeOutOption"></div>
+				<div id="audience" class="options-button" data-bind="click: fadeOutOption"></div>
+				<!--<div id="money">$<span data-bind="text: formatMoney()"></span></div> -->
+			</div>
+			<div id="question-box">
+				<span class="big-text">Q:</span>
+				<span class="content" data-bind="text: getQuestionText()"></span>
+			</div>
+			<div id="answer-box">
+				<div id="answer-one" class="answer" data-bind="click: function() { answerQuestion(0, $element.id) }">
+					<span class="big-text">A.</span><span data-bind="text: getAnswerText(0)"></span>
+				</div>
+				<div id="answer-two" class="answer" data-bind="click: function() { answerQuestion(1, $element.id) }">
+					<span class="big-text">B.</span><span data-bind="text: getAnswerText(1)"></span>
+				</div>
+				<div id="answer-three" class="answer" data-bind="click: function() { answerQuestion(2, $element.id) }">
+					<span class="big-text">C.</span><span data-bind="text: getAnswerText(2)"></span>
+				</div>
+				<div id="answer-four" class="answer" data-bind="click: function() { answerQuestion(3, $element.id) }">
+					<span class="big-text">D.</span><span data-bind="text: getAnswerText(3)"></span>
+				</div>
+			</div>
+		</div>
+
+	</body>
+</html>
